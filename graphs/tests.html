@@ -34,7 +34,7 @@
 
 	<body>
 
-		<canvas class="graph" data-infos="10,20,30"></canvas>
+		<div class="graph" data-infos="Date,Total" data-stats="10,20,30"></div>
 
 		<script type="text/javascript">
 
@@ -55,16 +55,25 @@
 					// ====================================
 					setBuild: function(c)
 					{
-						this.c   = c;
-						this.ctx = c.getContext('2d');
+						// On créer un canvas
+						var canvas = document.createElement('canvas');
 
+						// On enregistre le parent et le canvas+contexte
+						this.p   = c;
+						this.c   = canvas;
+						this.ctx = canvas.getContext('2d');
+						
+						// On définit la taille du canvas
 						this.setSize();
+
+						// On ajoute le canvas au parent
+						this.p.appendChild(canvas);
 					},
 					setSize: function()
 					{
 						// Update width/height this
-						this.width  = this.c.clientWidth;
-						this.height = this.c.clientHeight;
+						this.width  = this.p.clientWidth;
+						this.height = this.p.clientHeight;
 
 						// Update attribut width/size tag canvas css
 						this.c.width  = this.width;
@@ -83,11 +92,11 @@
 
 						// Colors
 						this.ctx.fillStyle   = t.backgroundColor ? t.backgroundColor : '#000';
-						this.ctx.strokeStyle = t.borderColor ? t.borderColor : '#000';
+						this.ctx.strokeStyle = t.borderColor     ? t.borderColor     : '#000';
 
 						// Paramètres des lignes
 						this.ctx.lineWidth = t.lineWidth ? t.lineWidth : 1;
-						this.ctx.lineJoin  = t.lineJoin ? t.lineJoin : 'round';
+						this.ctx.lineJoin  = t.lineJoin  ? t.lineJoin  : 'round';
 
 						// Dessin de la forme
 						f(this);
@@ -179,6 +188,28 @@
 
 				var test = new libcanvas(c[0]);
 
+				test.newLine({
+								pos: [[0, 200], [100, 100], [200, 75], [300, 150], [400, 30], [500, 100]],
+								graph: true,
+								type: 'stroke', // stroke || fill [Facultatif]
+								borderColor: '#999', // [Facultatif]
+								lineWidth: 1 // [Facultatif]
+							});
+
+				/*
+				test.newCircle({
+								pos: [[0, 200], [100, 100], [200, 75], [300, 150], [400, 30], [500, 100]],
+								size: 10,
+								backgroundColor: 'rgba(0,0,0,.1)'
+							});
+
+				test.newCircle({
+								pos: [[0, 200], [100, 100], [200, 75], [300, 150], [400, 30], [500, 100]],
+								size: 5,
+								backgroundColor: '#999'
+							});
+				*/
+
 				/*
 				test.newLine({
 								pos: [[0, 300], [150, 0], [300, 300], [0, 300]], // positions [[x,y],[x,y]] [OBLIGATOIRE]
@@ -206,28 +237,6 @@
 								angle: [0, Math.PI*2] // start,end [Facultatif]
 							});
 				*/
-
-				test.newLine({
-								pos: [[0, 200], [100, 100], [200, 75], [300, 150], [400, 30], [500, 100]],
-								graph: true,
-								type: 'stroke', // stroke || fill [Facultatif]
-								borderColor: '#999', // [Facultatif]
-								lineWidth: 1 // [Facultatif]
-							});
-
-				test.newCircle({
-								pos: [[0, 200], [100, 100], [200, 75], [300, 150], [400, 30], [500, 100]],
-								size: 10,
-								backgroundColor: 'rgba(0,0,0,.1)'
-							});
-
-				test.newCircle({
-								pos: [[0, 200], [100, 100], [200, 75], [300, 150], [400, 30], [500, 100]],
-								size: 5,
-								backgroundColor: '#999'
-							});
-
-				console.log(test)
 
 			// ====================================
 
