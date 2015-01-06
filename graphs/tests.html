@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+	<head>
+		
+		<style type="text/css">
+
+			/* Reset CSS */
+			html,body,div,span,object,iframe,h1,h2,h3,h4,h5,h6,p,blockquote,pre,abbr,address,cite,code,del,dfn,em,img,ins,kbd,q,samp,small,strong,sub,sup,var,b,i,dl,dt,dd,ol,ul,li,fieldset,form,label,legend,table,caption,tbody,tfoot,thead,tr,th,td,article,aside,canvas,details,figcaption,figure,footer,header,hgroup,menu,nav,section,summary,time,mark,audio,video { margin:0; padding:0; border:0; outline:0; font-size:100%; vertical-align:baseline; background:transparent; }
+			body { line-height:1; }
+			article,aside,details,figcaption,figure,footer,header,hgroup,menu,nav,section {  display:block; }
+			nav ul { list-style:none; }
+			blockquote,q { quotes:none; }
+			blockquote:before,blockquote:after,q:before,q:after { content:''; content:none; }
+			a { margin:0; padding:0; font-size:100%; vertical-align:baseline; background:transparent; }
+			del { text-decoration: line-through; }
+			abbr[title],dfn[title] { border-bottom:1px dotted; cursor:help; }
+			table { border-collapse:collapse; border-spacing:0; }
+			hr { display:block; height:1px; border:0; margin:1em 0; padding:0; }
+			input,select { vertical-align:middle; }
+
+			/* Global styles */
+			.graph {
+				width: 500px;
+				height: 200px;
+				margin: 50px auto;
+				border: 1px solid #eee;
+				display: block;
+			}
+
+		</style>
+
+	</head>
+
+	<body>
+
+		<canvas class="graph" data-infos="10,20,30"></canvas>
+
+		<script type="text/javascript">
+
+			// ====================================
+			// Objet libcanvas
+
+				// Constructeur
+				function libcanvas(c)
+				{
+					this.setBuild(c);
+				}
+
+				// Méthodes
+				libcanvas.prototype =
+				{
+					// ====================================
+					// Général settings
+					// ====================================
+					setBuild: function(c)
+					{
+						this.c   = c;
+						this.ctx = c.getContext('2d');
+
+						this.setSize();
+					},
+					setSize: function()
+					{
+						// Update width/height this
+						this.width  = this.c.clientWidth;
+						this.height = this.c.clientHeight;
+
+						// Update attribut width/size tag canvas css
+						this.c.width  = this.width;
+						this.c.height = this.height;
+					},
+					// ====================================
+
+
+					// ====================================
+					// Tracées
+					// ====================================
+					newShape: function(t,f)
+					{
+						// Nouvelle forme
+						this.ctx.beginPath();
+
+						// Colors
+						this.ctx.fillStyle   = t.backgroundColor ? t.backgroundColor : '#000';
+						this.ctx.strokeStyle = t.borderColor ? t.borderColor : '#000';
+
+						// Paramètres des lignes
+						this.ctx.lineWidth = t.lineWidth ? t.lineWidth : 1;
+						this.ctx.lineJoin  = t.lineJoin ? t.lineJoin : 'round';
+
+						// Dessin de la forme
+						f(this);
+
+						// On termine la forme
+						this.ctx.closePath();
+					},
+					newLine: function(t)
+					{
+						if(t.pos)
+						{
+							this.newShape(t, function(x)
+							{
+								if(t.graph) var last = t.pos[0], base = t.pos[1][0]/2;
+
+								// Placement du premier point
+								x.ctx.moveTo(last[0], last[1]);
+
+								// On boucle sur tous les points à partir du deuxième
+								for(var i = 1; i < t.pos.length; i++)
+								{
+									var e = t.pos[i];
+
+									if(!t.graph)
+									{
+										x.ctx.lineTo(e[0], e[1]);
+									}
+									else
+									{
+										x.ctx.bezierCurveTo((last[0]+base), last[1], (e[0]-base), e[1], e[0], e[1]);
+										last = e;
+									}
+								}
+
+								// On définit le type de la forme (fill/stroke : défaut fill)
+								var type = t.type && ['fill','stroke'].indexOf(t.type) != -1 ? t.type : 'fill';
+								x.ctx[type]();
+							});
+						}
+					},
+					newCircle: function(t)
+					{
+						if(t.pos && t.size)
+						{
+							// On boucle sur tous les points à partir du deuxième
+							for(var i = 0; i < t.pos.length; i++)
+							{
+								this.newShape(t, function(x)
+								{
+									// Angles
+									var angles = t.angle ? t.angle : [0, Math.PI*2];
+
+									// On trace notre arc
+									x.ctx.arc(t.pos[i][0], t.pos[i][1], t.size, angles[0], angles[1]);
+
+									// On définit le type de la forme (fillRect/strokeRect : défaut fillRect)
+									var type = t.type && ['fill','stroke'].indexOf(t.type) != -1 ? t.type : 'fill';
+									x.ctx[type]();
+								});
+							}
+						}
+					},
+					newRect: function(t)
+					{
+						if(t.pos && t.size)
+						{
+							this.newShape(t, function(x)
+							{
+								// On définit le type de la forme (fillRect/strokeRect : défaut fillRect)
+								var type = t.type && ['fillRect','strokeRect'].indexOf(t.type) != -1 ? t.type : 'fillRect';
+								x.ctx[type](t.pos[0], t.pos[1], t.size[0], t.size[1]);
+							});
+						}
+					}
+					// ====================================
+				}
+
+			// ====================================
+			// Traitement de la page
+
+				var c = document.getElementsByClassName('graph');
+
+				/*
+				for(var i = 0; i < c.length; i++)
+				{
+					var test = new libcanvas(c[0]);
+				}
+				*/
+
+				var test = new libcanvas(c[0]);
+
+				/*
+				test.newLine({
+								pos: [[0, 300], [150, 0], [300, 300], [0, 300]], // positions [[x,y],[x,y]] [OBLIGATOIRE]
+								type: 'stroke', // stroke || fill [Facultatif]
+								backgroundColor: '#ff0000', // [Facultatif]
+								borderColor: '#00ff00', // [Facultatif]
+								lineJoin: 'round', // round || bevel [Facultatif]
+								lineWidth: 1 // [Facultatif]
+							});
+				test.newRect({
+								pos: [25, 50], // x,y [OBLIGATOIRE]
+								size: [200, 100], // width,height [OBLIGATOIRE]
+								backgroundColor: '#ff0000', // [Facultatif]
+								borderColor: '#00ff00', // [Facultatif]
+								type: 'fillRect', // fillRect || strokeRect [Facultatif]
+								lineWidth: 1 // [Facultatif]
+							});
+				test.newCircle({
+								pos: [50, 50], // x,y [OBLIGATOIRE]
+								size: 25, // width,height [OBLIGATOIRE]
+								backgroundColor: '#ff0000', // [Facultatif]
+								borderColor: '#00ff00', // [Facultatif]
+								type: 'stroke', // stroke || fill [Facultatif]
+								lineWidth: 3, // [Facultatif]
+								angle: [0, Math.PI*2] // start,end [Facultatif]
+							});
+				*/
+
+				test.newLine({
+								pos: [[0, 200], [100, 100], [200, 75], [300, 150], [400, 30], [500, 100]],
+								graph: true,
+								type: 'stroke', // stroke || fill [Facultatif]
+								borderColor: '#999', // [Facultatif]
+								lineWidth: 1 // [Facultatif]
+							});
+
+				test.newCircle({
+								pos: [[0, 200], [100, 100], [200, 75], [300, 150], [400, 30], [500, 100]],
+								size: 10,
+								backgroundColor: 'rgba(0,0,0,.1)'
+							});
+
+				test.newCircle({
+								pos: [[0, 200], [100, 100], [200, 75], [300, 150], [400, 30], [500, 100]],
+								size: 5,
+								backgroundColor: '#999'
+							});
+
+				console.log(test)
+
+			// ====================================
+
+		</script>
+		
+	</body>
+
+</html>
