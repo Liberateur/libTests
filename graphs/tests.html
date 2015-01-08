@@ -20,13 +20,64 @@
 			input,select { vertical-align:middle; }
 
 			/* Global styles */
+			.graph * {
+				-webkit-transition:all 200ms ease-out;
+				-moz-transition:all 200ms ease-out;
+				-ms-transition:all 200ms ease-out;
+				-o-transition:all 200ms ease-out;
+				transition:all 200ms ease-out
+			}
 			.graph {
 				width: 500px;
 				height: 200px;
-				margin: 50px auto;
-				border: 1px solid #eee;
+				margin: 10px auto;
 				display: block;
+				position: relative;
+				border: 5px solid #f9f9f9
 			}
+			.graph .canvas {
+				width: 0;
+				overflow: hidden;
+
+				-webkit-transition:all 2s ease-out;
+				-moz-transition:all 2s ease-out;
+				-ms-transition:all 2s ease-out;
+				-o-transition:all 2s ease-out;
+				transition:all 2s ease-out
+			}
+			.graph .bulle {
+				position: absolute;
+			}
+			.graph .bulle b {
+				padding: 5px;
+				position: absolute;
+				margin: -13px 0 0 -13px;
+				opacity: 0
+			}
+			.graph .bulle b i {
+				width: 10px;
+				height: 10px;
+				display: block;
+				border-radius: 20px;
+				border: 3px solid #fff;
+				box-shadow: 0 0 15px rgba(0,0,0,.1);
+			}
+			.graph .bulle span {
+				padding: 5px 10px;
+				border-radius: 5px;
+				top: -35px;
+				left: -50%;
+				opacity: 1;
+				background: rgba(0,0,0,.2);
+				position: relative;
+				white-space: nowrap;
+				opacity: 0
+			}
+
+			.graph.active .canvas { width: 100% }
+
+			.graph .bulle.active b,
+			.graph .bulle span.active { opacity: 1 }
 
 		</style>
 
@@ -34,211 +85,192 @@
 
 	<body>
 
-		<div class="graph" data-infos="Date,Total" data-stats="10,20,30"></div>
+		<div class="graph" data-stats="0,40,25,50,60,100,120,80,54" data-color="#eee" data-pcolor="#bbb"></div>
+		<!-- <div class="graph" data-stats="10,20,30" data-color="#eee" data-infos="Date,Total" data-linesize="5" data-bezier="false"></div> -->
 
 		<script type="text/javascript">
 
 			// ====================================
-			// Objet libcanvas
+			// Objet libgraph
+			// ====================================
 
 				// Constructeur
-				function libcanvas(c)
+				function libgraph(c)
 				{
 					this.setBuild(c);
 				}
 
 				// Méthodes
-				libcanvas.prototype =
+				libgraph.prototype =
 				{
-					// ====================================
+					// ======================
 					// Général settings
-					// ====================================
-					setBuild: function(c)
+					// ======================
+					setBuild: function(p)
 					{
-						// On créer un canvas
-						var canvas = document.createElement('canvas');
-
-						// On enregistre le parent et le canvas+contexte
-						this.p   = c;
-						this.c   = canvas;
-						this.ctx = canvas.getContext('2d');
+						// On enregistre le parent
+						this.p = p;
 						
+						// On créer notre canvas
+						this.createCanvas();
+
+						// On récupère les paramètres du graph
+						var pc  = this.p.getAttribute('data-color'),
+							ppc = this.p.getAttribute('data-pcolor'),
+							pb  = this.p.getAttribute('data-bezier'),
+							pl  = this.p.getAttribute('data-linesize'),
+							pi  = this.p.getAttribute('data-statsinfos');
+
+						// Si non défini ou applique les par défauts
+						this.pc  = pc  ? pc  : '#999';
+						this.ppc = ppc ? ppc : pc;
+						this.pi  = pi  ? pi  : '';
+						this.pl  = pl  ? parseInt(pl) : 3;
+						this.pb  = pb === 'false' ? false : true;
+
+						// On récupère les stats du graph
+						this.pos = this.p.getAttribute('data-stats').split(',');
+						for(var i in this.pos) this.pos[i] = parseInt(this.pos[i]);
+
 						// On définit la taille du canvas
 						this.setSize();
 
-						// On ajoute le canvas au parent
-						this.p.appendChild(canvas);
+						// On déinfit la liste de coordonnées
+						this.setCords();
+
+						// On créer notre graph
+						this.createGraph();
 					},
 					setSize: function()
 					{
 						// Update width/height this
-						this.width  = this.p.clientWidth;
-						this.height = this.p.clientHeight;
+						this.c.width  = this.p.clientWidth;
+						this.c.height = this.p.clientHeight;
 
 						// Update attribut width/size tag canvas css
-						this.c.width  = this.width;
-						this.c.height = this.height;
+						this.width  = this.c.width;
+						this.height = this.c.height-this.pl*2;
 					},
-					// ====================================
+					setCords: function()
+					{
+						var s = this.width/(this.pos.length-1), c = [], a = 0;
+
+						// On récupère le chiffre le plus haut
+						for(var i in this.pos) if(a < this.pos[i]) a = this.pos[i];
+						a = a*1.3;
+
+						// On boucle sur les positions et définit les coordonnées x,y
+						for(var i in this.pos) c.push([s*i, this.height-this.height*(this.pos[i]*100/a)/100]);
+
+						this.coords = c;
+					},
 
 
-					// ====================================
-					// Tracées
-					// ====================================
-					newShape: function(t,f)
+					// ======================
+					// Créations
+					// ======================
+					createCanvas: function()
+					{
+						// On créer un canvas
+						var canvas = document.createElement('canvas'),
+							div = document.createElement('div');
+
+						div.className = 'canvas';
+						this.c   = canvas;
+						this.ctx = canvas.getContext('2d');
+
+						// On reset le parent
+						this.p.innerHTML = '';
+
+						// On ajoute le canvas au parent
+						div.appendChild(canvas);
+						this.p.appendChild(div);
+					},
+					createBulle: function(n,posx,posy)
+					{
+						// On créer la bubulle
+						var b = document.createElement('div');
+						b.className = 'bulle';
+						b.style.top = posy+'px';
+						b.style.left = posx+'px';
+						b.innerHTML = '<b><i style="background:'+this.ppc+'"></i></b><span>'+n+' '+this.pi+'</span>';
+
+						// On ajoute la bubulle
+						this.p.appendChild(b);
+					},
+					createGraph: function()
 					{
 						// Nouvelle forme
 						this.ctx.beginPath();
 
-						// Colors
-						this.ctx.fillStyle   = t.backgroundColor ? t.backgroundColor : '#000';
-						this.ctx.strokeStyle = t.borderColor     ? t.borderColor     : '#000';
+						// Paramètes
+						this.ctx.strokeStyle = this.pc;
+						this.ctx.lineWidth   = this.pl;
 
-						// Paramètres des lignes
-						this.ctx.lineWidth = t.lineWidth ? t.lineWidth : 1;
-						this.ctx.lineJoin  = t.lineJoin  ? t.lineJoin  : 'round';
+						// Si bezier est activé
+						if(this.pb) var base = this.coords[1][0]/2;
 
-						// Dessin de la forme
-						f(this);
+						var last = this.coords[0];
+
+						// Placement du premier point
+						this.ctx.moveTo(last[0], last[1]+this.pl);
+						this.createBulle(this.pos[0], last[0], last[1]+this.pl);
+
+						// On boucle sur tous les points à partir du deuxième
+						for(var i = 1; i < this.coords.length; i++)
+						{
+							var e = this.coords[i];
+
+							if(!this.pb)
+							{
+								this.ctx.lineTo(e[0], e[1]);
+							}
+							else
+							{
+								this.ctx.bezierCurveTo((last[0]+base), last[1], (e[0]-base), e[1], e[0], e[1]);
+								last = e;
+							}
+
+							this.createBulle(this.pos[i], e[0], e[1]);
+						}
+
+						// On ne fait que le contour
+						this.ctx.stroke();
 
 						// On termine la forme
 						this.ctx.closePath();
 					},
-					newLine: function(t)
+
+					showCanvas: function()
 					{
-						if(t.pos)
-						{
-							this.newShape(t, function(x)
-							{
-								if(t.graph) var last = t.pos[0], base = t.pos[1][0]/2;
+						var p = this.p, c = p.getElementsByClassName('bulle'), t = c.length;
 
-								// Placement du premier point
-								x.ctx.moveTo(last[0], last[1]);
-
-								// On boucle sur tous les points à partir du deuxième
-								for(var i = 1; i < t.pos.length; i++)
-								{
-									var e = t.pos[i];
-
-									if(!t.graph)
-									{
-										x.ctx.lineTo(e[0], e[1]);
-									}
-									else
-									{
-										x.ctx.bezierCurveTo((last[0]+base), last[1], (e[0]-base), e[1], e[0], e[1]);
-										last = e;
-									}
-								}
-
-								// On définit le type de la forme (fill/stroke : défaut fill)
-								var type = t.type && ['fill','stroke'].indexOf(t.type) != -1 ? t.type : 'fill';
-								x.ctx[type]();
-							});
-						}
-					},
-					newCircle: function(t)
-					{
-						if(t.pos && t.size)
-						{
-							// On boucle sur tous les points à partir du deuxième
-							for(var i = 0; i < t.pos.length; i++)
-							{
-								this.newShape(t, function(x)
-								{
-									// Angles
-									var angles = t.angle ? t.angle : [0, Math.PI*2];
-
-									// On trace notre arc
-									x.ctx.arc(t.pos[i][0], t.pos[i][1], t.size, angles[0], angles[1]);
-
-									// On définit le type de la forme (fillRect/strokeRect : défaut fillRect)
-									var type = t.type && ['fill','stroke'].indexOf(t.type) != -1 ? t.type : 'fill';
-									x.ctx[type]();
-								});
-							}
-						}
-					},
-					newRect: function(t)
-					{
-						if(t.pos && t.size)
-						{
-							this.newShape(t, function(x)
-							{
-								// On définit le type de la forme (fillRect/strokeRect : défaut fillRect)
-								var type = t.type && ['fillRect','strokeRect'].indexOf(t.type) != -1 ? t.type : 'fillRect';
-								x.ctx[type](t.pos[0], t.pos[1], t.size[0], t.size[1]);
-							});
-						}
+						// On boucle sur les points et les affiche un puis l'autre
+						for(var i in c) showP(c[i],i);
+						
+						// On lance le tracée
+						setTimeout(function() { p.className += ' active'; }, 200*t);
 					}
-					// ====================================
 				}
+
+				// Functions
+				function showC(c,i) { setTimeout(function(){ c.showCanvas(); }, 250*(i+1)); }
+				function showP(c,i) { setTimeout(function(){ c.className += ' active'; }, 200*i); }
 
 			// ====================================
 			// Traitement de la page
+			// ====================================
 
-				var c = document.getElementsByClassName('graph');
+				var c = document.getElementsByClassName('graph'), cs = {};
 
-				/*
+				// On boucle sur tous les .graph
 				for(var i = 0; i < c.length; i++)
 				{
-					var test = new libcanvas(c[0]);
+					// On créer un nouveau graph
+					cs[i] = new libgraph(c[i]);
+
+					showC(cs[i],i);
 				}
-				*/
-
-				var test = new libcanvas(c[0]);
-
-				test.newLine({
-								pos: [[0, 200], [100, 100], [200, 75], [300, 150], [400, 30], [500, 100]],
-								graph: true,
-								type: 'stroke', // stroke || fill [Facultatif]
-								borderColor: '#999', // [Facultatif]
-								lineWidth: 1 // [Facultatif]
-							});
-
-				/*
-				test.newCircle({
-								pos: [[0, 200], [100, 100], [200, 75], [300, 150], [400, 30], [500, 100]],
-								size: 10,
-								backgroundColor: 'rgba(0,0,0,.1)'
-							});
-
-				test.newCircle({
-								pos: [[0, 200], [100, 100], [200, 75], [300, 150], [400, 30], [500, 100]],
-								size: 5,
-								backgroundColor: '#999'
-							});
-				*/
-
-				/*
-				test.newLine({
-								pos: [[0, 300], [150, 0], [300, 300], [0, 300]], // positions [[x,y],[x,y]] [OBLIGATOIRE]
-								type: 'stroke', // stroke || fill [Facultatif]
-								backgroundColor: '#ff0000', // [Facultatif]
-								borderColor: '#00ff00', // [Facultatif]
-								lineJoin: 'round', // round || bevel [Facultatif]
-								lineWidth: 1 // [Facultatif]
-							});
-				test.newRect({
-								pos: [25, 50], // x,y [OBLIGATOIRE]
-								size: [200, 100], // width,height [OBLIGATOIRE]
-								backgroundColor: '#ff0000', // [Facultatif]
-								borderColor: '#00ff00', // [Facultatif]
-								type: 'fillRect', // fillRect || strokeRect [Facultatif]
-								lineWidth: 1 // [Facultatif]
-							});
-				test.newCircle({
-								pos: [50, 50], // x,y [OBLIGATOIRE]
-								size: 25, // width,height [OBLIGATOIRE]
-								backgroundColor: '#ff0000', // [Facultatif]
-								borderColor: '#00ff00', // [Facultatif]
-								type: 'stroke', // stroke || fill [Facultatif]
-								lineWidth: 3, // [Facultatif]
-								angle: [0, Math.PI*2] // start,end [Facultatif]
-							});
-				*/
-
-			// ====================================
 
 		</script>
 		
