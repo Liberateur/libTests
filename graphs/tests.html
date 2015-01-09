@@ -6,21 +6,44 @@
 		<style type="text/css">
 
 			/* Reset CSS */
-			html,body,div,span,object,iframe,h1,h2,h3,h4,h5,h6,p,blockquote,pre,abbr,address,cite,code,del,dfn,em,img,ins,kbd,q,samp,small,strong,sub,sup,var,b,i,dl,dt,dd,ol,ul,li,fieldset,form,label,legend,table,caption,tbody,tfoot,thead,tr,th,td,article,aside,canvas,details,figcaption,figure,footer,header,hgroup,menu,nav,section,summary,time,mark,audio,video { margin:0; padding:0; border:0; outline:0; font-size:100%; vertical-align:baseline; background:transparent; }
-			body { line-height:1; }
-			article,aside,details,figcaption,figure,footer,header,hgroup,menu,nav,section {  display:block; }
-			nav ul { list-style:none; }
-			blockquote,q { quotes:none; }
-			blockquote:before,blockquote:after,q:before,q:after { content:''; content:none; }
-			a { margin:0; padding:0; font-size:100%; vertical-align:baseline; background:transparent; }
-			del { text-decoration: line-through; }
-			abbr[title],dfn[title] { border-bottom:1px dotted; cursor:help; }
-			table { border-collapse:collapse; border-spacing:0; }
-			hr { display:block; height:1px; border:0; margin:1em 0; padding:0; }
-			input,select { vertical-align:middle; }
+			html, body, body div, span, object, iframe, h1, h2, h3, h4, h5, h6, p, blockquote, pre, abbr, address, cite, code, del, dfn, em, img, ins, kbd, q, samp, small, strong, sub, sup, var, b, i, dl, dt, dd, ol, ul, li, fieldset, form, label, legend, table, caption, tbody, tfoot, thead, tr, th, td, article, aside, figure, footer, header, menu, nav, section, time, mark, audio, video, details, summary { margin: 0; padding: 0; border: 0; font-size: 100%; font-weight: normal; vertical-align: baseline; background: transparent; }
+			article, aside, figure, footer, header, nav, section, details, summary {display: block;}
+			*, *:before, *:after {box-sizing: border-box; }
+			img, object, embed {max-width: 100%;}
+			html {overflow-y: scroll;}
+			ul {list-style: none;}
+			blockquote, q {quotes: none;}
+			blockquote:before, blockquote:after, q:before, q:after {content: ''; content: none;}
+			a {margin: 0; padding: 0; font-size: 100%; vertical-align: baseline; background: transparent;}
+			del {text-decoration: line-through;}
+			abbr[title], dfn[title] {border-bottom: 1px dotted #000; cursor: help;}
+			table {border-collapse: collapse; border-spacing: 0;}
+			th {font-weight: bold; vertical-align: bottom;}
+			td {font-weight: normal; vertical-align: top;}
+			hr {display: block; height: 1px; border: 0; border-top: 1px solid #ccc; margin: 1em 0; padding: 0;}
+			input, select {vertical-align: middle;}
+			pre { white-space: pre; white-space: pre-wrap; white-space: pre-line; word-wrap: break-word; }
+			input[type="radio"] {vertical-align: text-bottom;}
+			input[type="checkbox"] {vertical-align: bottom;}
+			select, input, textarea {font: 99% sans-serif;}
+			table {font-size: inherit; font: 100%;}
+			small {font-size: 85%;}
+			strong {font-weight: bold;}
+			td, td img {vertical-align: top;} 
+			sub, sup {font-size: 75%; line-height: 0; position: relative;}
+			sup {top: -0.5em;}
+			sub {bottom: -0.25em;}
+			pre, code, kbd, samp {font-family: monospace, sans-serif;}
+			label, input[type=button], input[type=submit], input[type=file], button {cursor: pointer;}
+			button, input, select, textarea {margin: 0;}
+			button, input[type=button] {width: auto; overflow: visible;}
+
+			/* Fonts */
+			@import url(http://fonts.googleapis.com/css?family=Roboto);
 
 			/* Global styles */
 			.graph * {
+				font-family: 'Roboto', sans-serif;
 				-webkit-transition:all 200ms ease-out;
 				-moz-transition:all 200ms ease-out;
 				-ms-transition:all 200ms ease-out;
@@ -33,7 +56,8 @@
 				margin: 10px auto;
 				display: block;
 				position: relative;
-				border: 5px solid #f9f9f9
+				border: 5px solid #f9f9f9;
+				font-size: 14px;
 			}
 			.graph .canvas {
 				width: 0;
@@ -45,39 +69,63 @@
 				-o-transition:all 2s ease-out;
 				transition:all 2s ease-out
 			}
+
+			.graph .infos {
+				margin-top: 10px;
+				color: #bbb;
+				position: relative;
+				font-size: 12px
+			}
+			.graph .infos li { position: absolute; display: block; }
+			.graph .infos li span { left: -50%; position: relative; }
+
 			.graph .bulle {
 				position: absolute;
 			}
 			.graph .bulle b {
-				padding: 5px;
+				padding: 10px;
 				position: absolute;
-				margin: -13px 0 0 -13px;
+				margin: -17px 0 0 -17px;
+				cursor: pointer;
 				opacity: 0
 			}
 			.graph .bulle b i {
-				width: 10px;
-				height: 10px;
+				width: 15px;
+				height: 15px;
 				display: block;
 				border-radius: 20px;
 				border: 3px solid #fff;
 				box-shadow: 0 0 15px rgba(0,0,0,.1);
 			}
 			.graph .bulle span {
-				padding: 5px 10px;
+				padding: 3px 5px;
 				border-radius: 5px;
-				top: -35px;
+				top: -20px;
 				left: -50%;
 				opacity: 1;
-				background: rgba(0,0,0,.2);
+				color: #999;
+				background: #fff;
 				position: relative;
 				white-space: nowrap;
-				opacity: 0
+				opacity: 0;
+				pointer-events: none;
+				box-shadow: 0 0 10px rgba(0,0,0,.1);
 			}
 
 			.graph.active .canvas { width: 100% }
 
-			.graph .bulle.active b,
-			.graph .bulle span.active { opacity: 1 }
+			.graph .bulle.active b { opacity: 1 }
+			.graph .bulle:hover b i {
+				background: #999 !important;
+				box-shadow: 0 0 15px rgba(0,0,0,.2)
+			}
+
+			.graph .bulle span:hover,
+			.graph .bulle b:hover + span {
+				pointer-events: auto;
+				top: -30px;
+				opacity: 1
+			}
 
 		</style>
 
@@ -85,7 +133,7 @@
 
 	<body>
 
-		<div class="graph" data-stats="0,40,25,50,60,100,120,80,54" data-color="#eee" data-pcolor="#bbb"></div>
+		<div class="graph" data-stats="0,40,25,50,60,100,120,80,54" data-statsinfos="01/01,02/01,03/01,04/01,05/01,06/01,07/01,08/01,09/01" data-infos="Visiteurs" data-color="#E5FE99" data-pcolor="#BBCC00"></div>
 		<!-- <div class="graph" data-stats="10,20,30" data-color="#eee" data-infos="Date,Total" data-linesize="5" data-bezier="false"></div> -->
 
 		<script type="text/javascript">
@@ -110,16 +158,14 @@
 					{
 						// On enregistre le parent
 						this.p = p;
-						
-						// On créer notre canvas
-						this.createCanvas();
 
 						// On récupère les paramètres du graph
 						var pc  = this.p.getAttribute('data-color'),
 							ppc = this.p.getAttribute('data-pcolor'),
 							pb  = this.p.getAttribute('data-bezier'),
 							pl  = this.p.getAttribute('data-linesize'),
-							pi  = this.p.getAttribute('data-statsinfos');
+							pi  = this.p.getAttribute('data-infos'),
+							psi = this.p.getAttribute('data-statsinfos');
 
 						// Si non défini ou applique les par défauts
 						this.pc  = pc  ? pc  : '#999';
@@ -127,10 +173,19 @@
 						this.pi  = pi  ? pi  : '';
 						this.pl  = pl  ? parseInt(pl) : 3;
 						this.pb  = pb === 'false' ? false : true;
+						this.psi = [];
 
-						// On récupère les stats du graph
+						// On récupère les données du graph
 						this.pos = this.p.getAttribute('data-stats').split(',');
-						for(var i in this.pos) this.pos[i] = parseInt(this.pos[i]);
+						psi = psi.split(',');
+						for(var i in this.pos)
+						{
+							this.pos[i] = parseInt(this.pos[i]);
+							this.psi[i] = psi[i];
+						}
+						
+						// On créer notre canvas
+						this.createCanvas();
 
 						// On définit la taille du canvas
 						this.setSize();
@@ -185,18 +240,36 @@
 						// On ajoute le canvas au parent
 						div.appendChild(canvas);
 						this.p.appendChild(div);
+
+						// On créer une div pour stocker nos infos
+						var ul = document.createElement('ul');
+						ul.className = 'infos';
+
+						this.p.appendChild(ul);
+						this.pinfos = ul;
 					},
-					createBulle: function(n,posx,posy)
+					createBulle: function(n,posx,posy,i)
 					{
 						// On créer la bubulle
 						var b = document.createElement('div');
-						b.className = 'bulle';
-						b.style.top = posy+'px';
+						b.className  = 'bulle';
+						b.style.top  = posy+'px';
 						b.style.left = posx+'px';
-						b.innerHTML = '<b><i style="background:'+this.ppc+'"></i></b><span>'+n+' '+this.pi+'</span>';
+						b.innerHTML  = '<b><i style="background:'+this.ppc+'"></i></b><span>'+n+' '+this.pi+'</span>';
 
 						// On ajoute la bubulle
 						this.p.appendChild(b);
+
+						// On créer l'infos de la bubulle
+						if(this.psi[i])
+						{
+							var b = document.createElement('li');
+							b.style.left = posx+'px';
+							b.innerHTML  = '<span>'+this.psi[i]+'</span>';
+
+							// On ajoute l'infos
+							this.pinfos.appendChild(b);
+						}
 					},
 					createGraph: function()
 					{
@@ -214,7 +287,7 @@
 
 						// Placement du premier point
 						this.ctx.moveTo(last[0], last[1]+this.pl);
-						this.createBulle(this.pos[0], last[0], last[1]+this.pl);
+						this.createBulle(this.pos[0], last[0], last[1]+this.pl, 0);
 
 						// On boucle sur tous les points à partir du deuxième
 						for(var i = 1; i < this.coords.length; i++)
@@ -231,7 +304,7 @@
 								last = e;
 							}
 
-							this.createBulle(this.pos[i], e[0], e[1]);
+							this.createBulle(this.pos[i], e[0], e[1], i);
 						}
 
 						// On ne fait que le contour
@@ -254,8 +327,24 @@
 				}
 
 				// Functions
-				function showC(c,i) { setTimeout(function(){ c.showCanvas(); }, 250*(i+1)); }
 				function showP(c,i) { setTimeout(function(){ c.className += ' active'; }, 200*i); }
+				function showC(c,i)
+				{
+					setTimeout(function(){ c.showCanvas(); }, 250*(i+1));
+
+					// On ajoute un mousehover sur les bulles
+					hover(c.p);
+				}
+				function hover(c)
+				{
+					c.addEventListener('mouseover', function(e)
+					{
+						e = e || window.event;
+						var t = e.srcElement || e.target;
+
+						if(['B','SPAN'].indexOf(t.tagName) != -1) console.log(t.tagName)
+					});
+				}
 
 			// ====================================
 			// Traitement de la page
@@ -269,6 +358,7 @@
 					// On créer un nouveau graph
 					cs[i] = new libgraph(c[i]);
 
+					// On affiche le graph
 					showC(cs[i],i);
 				}
 
