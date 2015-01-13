@@ -133,7 +133,7 @@
 
 	<body>
 
-		<div class="graph" data-stats="0,40,25,50,60,100,120,80,54" data-statsinfos="01/01,02/01,03/01,04/01,05/01,06/01,07/01,08/01,09/01" data-infos="Visiteurs" data-color="#E5FE99" data-pcolor="#BBCC00"></div>
+		<div class="graph" data-stats="0,40,25,50,60,100,120,80,54" data-statsinfos="01/01,02/01,03/01,04/01,05/01,06/01,07/01,08/01,09/01" data-infos="Visiteurs" data-color="#BBCC00"></div>
 		<!-- <div class="graph" data-stats="10,20,30" data-color="#eee" data-infos="Date,Total" data-linesize="5" data-bezier="false"></div> -->
 
 		<script type="text/javascript">
@@ -161,7 +161,6 @@
 
 						// On récupère les paramètres du graph
 						var pc  = this.p.getAttribute('data-color'),
-							ppc = this.p.getAttribute('data-pcolor'),
 							pb  = this.p.getAttribute('data-bezier'),
 							pl  = this.p.getAttribute('data-linesize'),
 							pi  = this.p.getAttribute('data-infos'),
@@ -169,7 +168,6 @@
 
 						// Si non défini ou applique les par défauts
 						this.pc  = pc  ? pc  : '#999';
-						this.ppc = ppc ? ppc : pc;
 						this.pi  = pi  ? pi  : '';
 						this.pl  = pl  ? parseInt(pl) : 3;
 						this.pb  = pb === 'false' ? false : true;
@@ -204,7 +202,7 @@
 
 						// Update attribut width/size tag canvas css
 						this.width  = this.c.width;
-						this.height = this.c.height-this.pl*2;
+						this.height = this.c.height;
 					},
 					setCords: function()
 					{
@@ -255,7 +253,7 @@
 						b.className  = 'bulle';
 						b.style.top  = posy+'px';
 						b.style.left = posx+'px';
-						b.innerHTML  = '<b><i style="background:'+this.ppc+'"></i></b><span>'+n+' '+this.pi+'</span>';
+						b.innerHTML  = '<b><i style="background:'+this.pc+'"></i></b><span>'+n+' '+this.pi+'</span>';
 
 						// On ajoute la bubulle
 						this.p.appendChild(b);
@@ -277,7 +275,7 @@
 						this.ctx.beginPath();
 
 						// Paramètes
-						this.ctx.strokeStyle = this.pc;
+						this.ctx.strokeStyle = this.ctx.fillStyle = this.pc;
 						this.ctx.lineWidth   = this.pl;
 
 						// Si bezier est activé
@@ -286,8 +284,8 @@
 						var last = this.coords[0];
 
 						// Placement du premier point
-						this.ctx.moveTo(last[0], last[1]+this.pl);
-						this.createBulle(this.pos[0], last[0], last[1]+this.pl, 0);
+						this.ctx.moveTo(last[0], last[1]);
+						this.createBulle(this.pos[0], last[0], last[1], 0);
 
 						// On boucle sur tous les points à partir du deuxième
 						for(var i = 1; i < this.coords.length; i++)
@@ -307,8 +305,17 @@
 							this.createBulle(this.pos[i], e[0], e[1], i);
 						}
 
-						// On ne fait que le contour
+						// On trace la courbe avec une opacité
+						this.ctx.globalAlpha = 0.4;
 						this.ctx.stroke();
+
+						// On referme la courbe pour dessiner le background
+						this.ctx.lineTo(this.width, this.height);
+						this.ctx.lineTo(0, this.height);
+
+						// On ne fait le contour avec une opacité
+						this.ctx.globalAlpha = 0.1;
+						this.ctx.fill();
 
 						// On termine la forme
 						this.ctx.closePath();
