@@ -42,7 +42,7 @@
 			@import url(http://fonts.googleapis.com/css?family=Roboto);
 
 			/* Global styles */
-			.graph * {
+			.libgraph * {
 				font-family: 'Roboto', sans-serif;
 				-webkit-transition:all 200ms ease-out;
 				-moz-transition:all 200ms ease-out;
@@ -50,7 +50,7 @@
 				-o-transition:all 200ms ease-out;
 				transition:all 200ms ease-out
 			}
-			.graph {
+			.libgraph {
 				width: 500px;
 				height: 200px;
 				margin: 10px auto;
@@ -59,7 +59,7 @@
 				border: 5px solid #f9f9f9;
 				font-size: 14px;
 			}
-			.graph .canvas {
+			.libgraph .canvas {
 				width: 0;
 				overflow: hidden;
 
@@ -70,62 +70,78 @@
 				transition:all 2s ease-out
 			}
 
-			.graph .infos {
-				margin-top: 10px;
+			.libgraph .libstats {
 				color: #bbb;
-				position: relative;
-				font-size: 12px
-			}
-			.graph .infos li { position: absolute; display: block; }
-			.graph .infos li span { left: -50%; position: relative; }
-
-			.graph .bulle {
+				font-size: 12px;
+				height: 100%;
 				position: absolute;
+				top: 0;
+				text-align: center;
 			}
-			.graph .bulle b {
-				padding: 10px;
+			.libgraph .libstats li {
+				height: 100%;
 				position: absolute;
-				margin: -17px 0 0 -17px;
 				cursor: pointer;
-				opacity: 0
 			}
-			.graph .bulle b i {
-				width: 15px;
-				height: 15px;
-				display: block;
+			.libgraph .libstats li .stats {
+				position: absolute;
+				width: 100%;
+			}
+			.libgraph .libstats li .bulle {
+				display: inline-block;
+				width: 16px;
+				height: 16px;
+				margin: 8px -8px -8px;
 				border-radius: 20px;
 				border: 3px solid #fff;
 				box-shadow: 0 0 15px rgba(0,0,0,.1);
-			}
-			.graph .bulle span {
-				padding: 3px 5px;
-				border-radius: 5px;
-				top: -20px;
-				left: -50%;
-				opacity: 1;
-				color: #999;
-				background: #fff;
-				position: relative;
-				white-space: nowrap;
 				opacity: 0;
+				left: 50%;
+				position: absolute;
+			}
+			.libgraph .libstats li .value {
+				opacity: 0;
+				background: #fff;
+				top: -10px;
+				position: relative;
+				margin: 0 -100%;
+				padding: 5px 10px;
+				box-shadow: 0 0 15px rgba(0,0,0,.15);
+				border-radius: 5px;
+				white-space: nowrap;
+				z-index: 1;
 				pointer-events: none;
-				box-shadow: 0 0 10px rgba(0,0,0,.1);
+			}
+			.libgraph .libstats li .subinfos {
+				width: 100%;
+				position: absolute;
+				margin-left: -50%;
+				bottom: -25px;
+				padding-top: 20px;
+				opacity: 0;
 			}
 
-			.graph.active .canvas { width: 100% }
-
-			.graph .bulle.active b { opacity: 1 }
-			.graph .bulle:hover b i {
-				background: #999 !important;
-				box-shadow: 0 0 15px rgba(0,0,0,.2)
+			.libgraph .libinfos {
+				color: #000;
+				font-size: 10px;
+				padding: 2px;
+				margin-top: -2px;
+				pointer-events: none;
+				opacity: .2;
+			}
+			.libgraph .libinfos li {
+				position: absolute;
+				width: 100%;
+				border-bottom: 1px solid #ddd;
 			}
 
-			.graph .bulle span:hover,
-			.graph .bulle b:hover + span {
-				pointer-events: auto;
-				top: -30px;
-				opacity: 1
-			}
+			/* Active */
+			.libgraph.libactive .canvas { width: 100% }
+			.libgraph .libstats li.libactive .bulle { opacity: 1; margin: -8px; }
+			.libgraph .libstats li.libactive .subinfos { opacity: 1; }
+			.libgraph .libstats li.libactive:hover .value { opacity: 1; top: -30px; pointer-events: auto; }
+			.libgraph .libstats li.libactive:hover .bulle { background: #999!important }
+			.libgraph .libstats li.libactive:hover .subinfos { color: #555 }
 
 		</style>
 
@@ -134,7 +150,7 @@
 	<body>
 
 		<div
-			class="graph"
+			class="libgraph"
 			data-stats="0,40,25,50,60,100,120,80,54"
 			data-statsinfos="01/01,02/01,03/01,04/01,05/01,06/01,07/01,08/01,09/01"
 			data-infos="Visiteurs"
@@ -171,6 +187,7 @@
 							i = p.getAttribute('data-infos'),
 							o = p.getAttribute('data-opacity'),
 							k = p.getAttribute('data-background'),
+							n = p.getAttribute('data-indicator'),
 
 							psi = p.getAttribute('data-statsinfos').split(','),
 							pos = p.getAttribute('data-stats').split(',');
@@ -178,13 +195,14 @@
 						// On applique les params par défauts
 						c = c ? c : '#999';
 						i = i ? i : '';
-						o = o ? parseInt(o) : 0.4;
+						o = o ? parseInt(o) : 0.2;
 						l = l ? parseInt(l) : 3;
+						n = n ? parseInt(n) : 4;
 						b = b === 'false' ? false : true;
 						k = k === 'false' ? false : true;
 
 						// On enregistre les params
-						this.params = {bezier: b, sizeLine: l, textInfo: i, color: c, opacity: o, background: k};
+						this.params = {bezier: b, sizeLine: l, indicator: n, textInfo: i, color: c, opacity: o, background: k};
 
 						// On récupère les données du graph
 						this.coords = { stats: pos, pos: [], posinfos: [] };
@@ -214,14 +232,27 @@
 					{
 						var c = [], a = 0;
 
-						// On récupère le chiffre le plus haut
-						for(var i in this.coords.pos) if(a < this.coords.pos[i]) a = this.coords.pos[i];
-						a = a*1.3;
+						// On récupère le chiffre le plus haut et le plsu bas du graph
+						for(var i in this.coords.pos)
+						{
+							var d = this.coords.pos[i];
+							if(a < d) a = d;
+						}
+						this.coords.max = a;
 
 						// On boucle sur les positions et définit les coordonnées x,y
-						for(var i in this.coords.pos) c.push([this.coords.space*i, this.height-this.height*(this.coords.pos[i]*100/a)/100]);
+						for(var i in this.coords.pos) c.push([this.coords.space*i, this.getTopPos(this.coords.pos[i])]);
 
 						this.coords.pos = c;
+					},
+
+
+					// ======================
+					// Functions
+					// ======================
+					getTopPos: function(c)
+					{
+						return this.height-this.height*(c*100/(this.coords.max*1.3))/100;
 					},
 
 
@@ -245,12 +276,19 @@
 						div.appendChild(canvas);
 						this.p.appendChild(div);
 
-						// On créer une div pour stocker nos infos
-						var ul = document.createElement('ul');
-						ul.className = 'infos';
+						// On créer un ul pour stocker nos stats
+						var ulstats = document.createElement('ul');
+						ulstats.className = 'libstats';
+						// On ajoute l'ul stats et l'enregistre
+						this.p.appendChild(ulstats);
+						this.pstats = ulstats;
 
-						this.p.appendChild(ul);
-						this.pinfos = ul;
+						// On créer un ul pour stocker nos infos
+						var ulinfos = document.createElement('ul');
+						ulinfos.className = 'libinfos';
+						// On ajoute l'ul infos et l'enregistre
+						this.p.appendChild(ulinfos);
+						this.pinfos = ulinfos;
 
 						// On définit la taille du canvas
 						this.setSize();
@@ -260,29 +298,41 @@
 
 						// On créer notre graph
 						this.createGraph();
+
+						// On ajoute nos infos du graph
+						this.createInfos();
+					},
+					createInfos: function()
+					{
+						// On arrondi le nombre max*1.3 que l'on divise par le nombre d'indicators
+						var l = Math.pow(10, this.coords.max.toString().length-2), s = Math.floor(this.coords.max*1.3/this.params.indicator/l)*l;
+
+						for (var i = 1; i <= this.params.indicator+1; i++)
+						{
+							var t = s*i, li = document.createElement('li');
+
+							li.innerHTML = t+' '+this.params.textInfo;
+							li.style.top = this.getTopPos(t)+'px';
+
+							this.pinfos.appendChild(li);
+						}
 					},
 					createBulle: function(n,posx,posy,i)
 					{
 						// On créer la bubulle
-						var b = document.createElement('div');
-						b.className  = 'bulle';
-						b.style.top  = posy+'px';
-						b.style.left = posx+'px';
-						b.innerHTML  = '<b><i style="background:'+this.params.color+'"></i></b><span>'+n+' '+this.params.textInfo+'</span>';
+						var li = document.createElement('li'),
+							infos = this.coords.posinfos[i] ? '<span class="subinfos">'+this.coords.posinfos[i]+'</span>' : '';
+
+						li.style.left = (posx-this.coords.space/2)+'px';
+						li.style.width = this.coords.space+'px';
+						li.innerHTML = '<div class="stats" style="top: '+posy+'px">'+
+										  '<span class="bulle" style="background:'+this.params.color+'"></span>'+
+										  '<span class="value">'+n+' '+this.params.textInfo+'</span>'+
+									   '</div>'+
+									   infos;
 
 						// On ajoute la bubulle
-						this.p.appendChild(b);
-
-						// On créer l'infos de la bubulle
-						if(this.coords.posinfos[i])
-						{
-							var b = document.createElement('li');
-							b.style.left = posx+'px';
-							b.innerHTML  = '<span>'+this.coords.posinfos[i]+'</span>';
-
-							// On ajoute l'infos
-							this.pinfos.appendChild(b);
-						}
+						this.pstats.appendChild(li);
 					},
 					createGraph: function()
 					{
@@ -343,46 +393,33 @@
 
 					showCanvas: function()
 					{
-						var p = this.p, c = p.getElementsByClassName('bulle');
+						var p = this.p, c = this.pstats.childNodes;
 
 						// On boucle sur les points et les affiche un puis l'autre
 						for(var i in c) showP(c[i],i);
 						
-						// On lance le tracée
-						setTimeout(function() { p.className += ' active'; }, 200*c.length);
+						// On lance le tracée en activant le graph
+						setTimeout(function() { p.className += ' libactive'; }, 200*c.length);
 					}
 				}
 
 				// Functions
 				function showP(c,i)
 				{
-					setTimeout(function(){ c.className += ' active'; }, 200*i);
+					setTimeout(function(){ c.className += ' libactive'; }, 200*i);
 				}
 				function showC(c,i)
 				{
 					setTimeout(function(){ c.showCanvas(); }, 250*(i+1));
-
-					// On ajoute un mousehover sur les bulles
-					hover(c.p);
-				}
-				function hover(c)
-				{
-					c.addEventListener('mouseover', function(e)
-					{
-						e = e || window.event;
-						var t = e.srcElement || e.target;
-
-						if(['B','SPAN'].indexOf(t.tagName) != -1) console.log(t.tagName)
-					});
 				}
 
 			// ====================================
 			// Traitement de la page
 			// ====================================
 
-				var c = document.getElementsByClassName('graph'), cs = {};
+				var c = document.getElementsByClassName('libgraph'), cs = {};
 
-				// On boucle sur tous les .graph
+				// On boucle sur tous les .libgraph
 				for(var i = 0; i < c.length; i++)
 				{
 					// On créer un nouveau graph
