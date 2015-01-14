@@ -133,8 +133,13 @@
 
 	<body>
 
-		<div class="graph" data-stats="0,40,25,50,60,100,120,80,54" data-statsinfos="01/01,02/01,03/01,04/01,05/01,06/01,07/01,08/01,09/01" data-infos="Visiteurs" data-color="#BBCC00"></div>
-		<!-- <div class="graph" data-stats="10,20,30" data-color="#eee" data-infos="Date,Total" data-linesize="5" data-bezier="false"></div> -->
+		<div
+			class="graph"
+			data-stats="0,40,25,50,60,100,120,80,54"
+			data-statsinfos="01/01,02/01,03/01,04/01,05/01,06/01,07/01,08/01,09/01"
+			data-infos="Visiteurs"
+			data-color="#BBCC00"
+		></div>
 
 		<script type="text/javascript">
 
@@ -160,39 +165,37 @@
 						this.p = p;
 
 						// On récupère les paramètres du graph
-						var pc  = this.p.getAttribute('data-color'),
-							pb  = this.p.getAttribute('data-bezier'),
-							pl  = this.p.getAttribute('data-linesize'),
-							pi  = this.p.getAttribute('data-infos'),
-							psi = this.p.getAttribute('data-statsinfos');
+						var c = p.getAttribute('data-color'),
+							b = p.getAttribute('data-bezier'),
+							l = p.getAttribute('data-linesize'),
+							i = p.getAttribute('data-infos'),
+							o = p.getAttribute('data-opacity'),
+							k = p.getAttribute('data-background'),
 
-						// Si non défini ou applique les par défauts
-						this.pc  = pc  ? pc  : '#999';
-						this.pi  = pi  ? pi  : '';
-						this.pl  = pl  ? parseInt(pl) : 3;
-						this.pb  = pb === 'false' ? false : true;
-						this.psi = [];
+							psi = p.getAttribute('data-statsinfos').split(','),
+							pos = p.getAttribute('data-stats').split(',');
+
+						// On applique les params par défauts
+						c = c ? c : '#999';
+						i = i ? i : '';
+						o = o ? parseInt(o) : 0.4;
+						l = l ? parseInt(l) : 3;
+						b = b === 'false' ? false : true;
+						k = k === 'false' ? false : true;
+
+						// On enregistre les params
+						this.params = {bezier: b, sizeLine: l, textInfo: i, color: c, opacity: o, background: k};
 
 						// On récupère les données du graph
-						this.pos = this.p.getAttribute('data-stats').split(',');
-						psi = psi.split(',');
-						for(var i in this.pos)
+						this.coords = { stats: pos, pos: [], posinfos: [] };
+						for(var i in pos)
 						{
-							this.pos[i] = parseInt(this.pos[i]);
-							this.psi[i] = psi[i];
+							this.coords.pos.push(parseInt(pos[i]));
+							this.coords.posinfos.push(psi[i]);
 						}
 						
 						// On créer notre canvas
 						this.createCanvas();
-
-						// On définit la taille du canvas
-						this.setSize();
-
-						// On déinfit la liste de coordonnées
-						this.setCords();
-
-						// On créer notre graph
-						this.createGraph();
 					},
 					setSize: function()
 					{
@@ -203,19 +206,22 @@
 						// Update attribut width/size tag canvas css
 						this.width  = this.c.width;
 						this.height = this.c.height;
+
+						// On enregistre l'espace entre chaque points
+						this.coords.space = this.width/(this.coords.pos.length-1);
 					},
 					setCords: function()
 					{
-						var s = this.width/(this.pos.length-1), c = [], a = 0;
+						var c = [], a = 0;
 
 						// On récupère le chiffre le plus haut
-						for(var i in this.pos) if(a < this.pos[i]) a = this.pos[i];
+						for(var i in this.coords.pos) if(a < this.coords.pos[i]) a = this.coords.pos[i];
 						a = a*1.3;
 
 						// On boucle sur les positions et définit les coordonnées x,y
-						for(var i in this.pos) c.push([s*i, this.height-this.height*(this.pos[i]*100/a)/100]);
+						for(var i in this.coords.pos) c.push([this.coords.space*i, this.height-this.height*(this.coords.pos[i]*100/a)/100]);
 
-						this.coords = c;
+						this.coords.pos = c;
 					},
 
 
@@ -245,6 +251,15 @@
 
 						this.p.appendChild(ul);
 						this.pinfos = ul;
+
+						// On définit la taille du canvas
+						this.setSize();
+
+						// On déinfit la liste de coordonnées
+						this.setCords();
+
+						// On créer notre graph
+						this.createGraph();
 					},
 					createBulle: function(n,posx,posy,i)
 					{
@@ -253,17 +268,17 @@
 						b.className  = 'bulle';
 						b.style.top  = posy+'px';
 						b.style.left = posx+'px';
-						b.innerHTML  = '<b><i style="background:'+this.pc+'"></i></b><span>'+n+' '+this.pi+'</span>';
+						b.innerHTML  = '<b><i style="background:'+this.params.color+'"></i></b><span>'+n+' '+this.params.textInfo+'</span>';
 
 						// On ajoute la bubulle
 						this.p.appendChild(b);
 
 						// On créer l'infos de la bubulle
-						if(this.psi[i])
+						if(this.coords.posinfos[i])
 						{
 							var b = document.createElement('li');
 							b.style.left = posx+'px';
-							b.innerHTML  = '<span>'+this.psi[i]+'</span>';
+							b.innerHTML  = '<span>'+this.coords.posinfos[i]+'</span>';
 
 							// On ajoute l'infos
 							this.pinfos.appendChild(b);
@@ -275,24 +290,24 @@
 						this.ctx.beginPath();
 
 						// Paramètes
-						this.ctx.strokeStyle = this.ctx.fillStyle = this.pc;
-						this.ctx.lineWidth   = this.pl;
+						this.ctx.strokeStyle = this.ctx.fillStyle = this.params.color;
+						this.ctx.lineWidth   = this.params.sizeLine;
 
 						// Si bezier est activé
-						if(this.pb) var base = this.coords[1][0]/2;
+						if(this.params.bezier) var base = this.coords.pos[1][0]/2;
 
-						var last = this.coords[0];
+						var last = this.coords.pos[0];
 
 						// Placement du premier point
 						this.ctx.moveTo(last[0], last[1]);
-						this.createBulle(this.pos[0], last[0], last[1], 0);
+						this.createBulle(this.coords.stats[0], last[0], last[1], 0);
 
 						// On boucle sur tous les points à partir du deuxième
-						for(var i = 1; i < this.coords.length; i++)
+						for(var i = 1; i < this.coords.pos.length; i++)
 						{
-							var e = this.coords[i];
+							var e = this.coords.pos[i];
 
-							if(!this.pb)
+							if(!this.params.bezier)
 							{
 								this.ctx.lineTo(e[0], e[1]);
 							}
@@ -302,20 +317,25 @@
 								last = e;
 							}
 
-							this.createBulle(this.pos[i], e[0], e[1], i);
+							this.createBulle(this.coords.stats[i], e[0], e[1], i);
 						}
 
-						// On trace la courbe avec une opacité
-						this.ctx.globalAlpha = 0.4;
+						// On applique l'opacité
+						this.ctx.globalAlpha = this.params.opacity;
+
+						// On trace le contour
 						this.ctx.stroke();
 
-						// On referme la courbe pour dessiner le background
-						this.ctx.lineTo(this.width, this.height);
-						this.ctx.lineTo(0, this.height);
+						// Si l'on met un background
+						if(this.params.background)
+						{
+							// On ferme le contour pour construire le background
+							this.ctx.lineTo(this.width, this.height);
+							this.ctx.lineTo(0, this.height);
 
-						// On ne fait le contour avec une opacité
-						this.ctx.globalAlpha = 0.1;
-						this.ctx.fill();
+							// On rempli la forme fermée
+							this.ctx.fill();
+						}
 
 						// On termine la forme
 						this.ctx.closePath();
@@ -323,18 +343,21 @@
 
 					showCanvas: function()
 					{
-						var p = this.p, c = p.getElementsByClassName('bulle'), t = c.length;
+						var p = this.p, c = p.getElementsByClassName('bulle');
 
 						// On boucle sur les points et les affiche un puis l'autre
 						for(var i in c) showP(c[i],i);
 						
 						// On lance le tracée
-						setTimeout(function() { p.className += ' active'; }, 200*t);
+						setTimeout(function() { p.className += ' active'; }, 200*c.length);
 					}
 				}
 
 				// Functions
-				function showP(c,i) { setTimeout(function(){ c.className += ' active'; }, 200*i); }
+				function showP(c,i)
+				{
+					setTimeout(function(){ c.className += ' active'; }, 200*i);
+				}
 				function showC(c,i)
 				{
 					setTimeout(function(){ c.showCanvas(); }, 250*(i+1));
