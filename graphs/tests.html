@@ -98,6 +98,7 @@
 				opacity: 0;
 				left: 50%;
 				position: absolute;
+				z-index: 1
 			}
 			.libgraph .libstats li .value {
 				opacity: 0;
@@ -163,6 +164,13 @@
 			data-infos="Visiteurs"
 			data-color="#BBCC00"
 		></div>
+		<div
+			class="libgraph"
+			data-stats="1,2,5,8,7,7,4,3,5,9"
+			data-statsinfos="01/01,02/01,03/01,04/01,05/01,06/01,07/01,08/01,09/01,10/01"
+			data-infos="Visiteurs"
+			data-color="#BBCC00"
+		></div>
 
 		<script type="text/javascript">
 
@@ -186,41 +194,48 @@
 					{
 						// On enregistre le parent
 						this.p = p;
-
-						// On récupère les paramètres du graph
-						var c = p.getAttribute('data-color'),
-							b = p.getAttribute('data-bezier'),
-							l = p.getAttribute('data-linesize'),
-							i = p.getAttribute('data-infos'),
-							o = p.getAttribute('data-opacity'),
-							k = p.getAttribute('data-background'),
-							n = p.getAttribute('data-indicator'),
-
-							psi = p.getAttribute('data-statsinfos').split(','),
-							pos = p.getAttribute('data-stats').split(',');
-
-						// On applique les params par défauts
-						c = c ? c : '#999';
-						i = i ? i : '';
-						o = o ? parseInt(o) : 0.2;
-						l = l ? parseInt(l) : 3;
-						n = n ? parseInt(n) : 4;
-						b = b === 'false' ? false : true;
-						k = k === 'false' ? false : true;
-
-						// On enregistre les params
-						this.params = {bezier: b, sizeLine: l, indicator: n, textInfo: i, color: c, opacity: o, background: k, ratioSize: 1.3};
+						
+						// On set nos paramètres globaux
+						this.setParams();
 
 						// On récupère les données du graph
+						var psi = this.p.getAttribute('data-statsinfos').split(','),
+							pos = this.p.getAttribute('data-stats').split(',');
+
+						// On construit les coordonnées du graph
 						this.coords = { stats: pos, pos: [], posinfos: [] };
 						for(var i in pos)
 						{
 							this.coords.pos.push(parseInt(pos[i]));
 							this.coords.posinfos.push(psi[i]);
 						}
-						
+
 						// On créer notre canvas
 						this.createCanvas();
+					},
+					setParams: function()
+					{
+						var t = this;
+						
+						// On enregistre les params
+						this.params = {
+										bezier:     getAttr('data-bezier',true,true),
+				   						sizeLine:   getAttr('data-linesize',3,false,true),
+										indicator:  getAttr('data-indicator',4,false,true),
+										textInfo:   getAttr('data-infos',''),
+										color:      getAttr('data-color','#999'),
+										opacity:    getAttr('data-opacity',0.3,false,true),
+										background: getAttr('data-background',true,true),
+										ratioSize:  1.3
+									  };
+
+						// Récupère l'attribut et set la valeur par défaut si inexistant
+						function getAttr(a,b,c,d)
+						{
+							// a = nom de l'attribut | b = valeur par défaut | c = si c'est un test de boleen | d = si c'est un nombre
+							var a = t.p.getAttribute(a);
+							return c ? (a === 'false' ? !b : b) : (d ? (a ? parseInt(a) : b) : (a ? a : b));
+						}
 					},
 					setSize: function()
 					{
@@ -311,23 +326,23 @@
 					},
 					createInfos: function()
 					{
-						var g = round(this.coords.max*this.params.ratioSize/this.params.indicator);
+						// On récupère la marge de chaque indicator
+						var c = Math.round(this.coords.max / this.params.indicator),
+							l = c.toString().length,
+							p = Math.pow(10, l-1),
+							g = Math.round(c/p)*p,
+							n = this.coords.max > g*this.params.indicator ? 1 : 0;
 
-						for (var i = 1; i <= this.params.indicator; i++)
+						// On boucle sur le nombre d'indicators
+						for (var i = 1; i <= this.params.indicator+n; i++)
 						{
 							// On calcul l'arrondi du nombre
-							var t = round(g*i), li = document.createElement('li');
+							var t = g*i, li = document.createElement('li');
 
 							li.innerHTML = t;
-							li.style.top = this.getTopPos(t)+'px';
+							li.style.bottom = (this.height-this.getTopPos(t))+'px';
 
 							this.pinfos.appendChild(li);
-						}
-
-						function round(c)
-						{
-							var c = Math.floor(c), l = c.toString().length, n = l > 2 ? 2 : 1, p = Math.pow(10, l-n);
-							return Math.floor(c/p)*p;
 						}
 					},
 					createBulle: function(n,posx,posy,i)
